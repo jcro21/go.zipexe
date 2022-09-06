@@ -119,21 +119,10 @@ func zipExeReaderElf(rda io.ReaderAt, size int64) (*zip.Reader, error) {
 	}
 
 	var max int64
-	for _, sect := range file.Sections {
-		if sect.Type == elf.SHT_NOBITS {
-			continue
-		}
-
-		// Check if this section has a zip file
-		if zfile, err := zip.NewReader(sect, int64(sect.Size)); err == nil {
-			return zfile, nil
-		}
-
-		// Otherwise move end of file pointer
-		end := int64(sect.Offset + sect.Size)
-		if end > max {
-			max = end
-		}
+	lastSection := file.Sections[len(file.Sections)-1]
+	end := int64(lastSection.Offset + lastSection.Size)
+	if end > max {
+		max = end
 	}
 
 	// No zip file within binary, try appended to end
